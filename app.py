@@ -748,12 +748,11 @@ else:
 
 # Sidebar Infrastructure Info
 with st.sidebar:
-    st.header("⚡ App Overview")
-    st.success("🟢 ADK Agent Engine: ACTIVE")
+    st.header("⚡ System Architecture")
+    st.success("🟢 Agent specs: ACTIVE")
     st.caption("Agent: `AgentgotchiCore`")
     st.caption("Model: `gemini-3.5-flash`")
     st.caption("Framework: `google-adk` v2.6.1")
-    st.caption("Session Store: `InMemorySessionService`")
 
     st.markdown("---")
     st.header("☁️ Cloud Run Specs")
