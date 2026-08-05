@@ -1,0 +1,1 @@
+{"name":"Agentgotchi - Cloud Run Agent Pet Fleet","description":"A modern agentic Tamagotchi fleet where each pet runs on a dedicated long-lived Cloud Run Instance and executes custom unvetted tricks in a secure Nested Sandbox.","requestFramePermissions":[],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}
