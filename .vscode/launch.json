@@ -2,10 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "npm install && npm run dev",
-      "type": "node-terminal",
+      "name": "Python: Streamlit App",
+      "type": "debugpy",
       "request": "launch",
-      "command": "npm install && npm run dev"
+      "module": "streamlit",
+      "args": [
+        "run",
+        "app.py"
+      ],
+      "jinja": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ]
 }

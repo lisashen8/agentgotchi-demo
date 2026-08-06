@@ -1,0 +1,4 @@
+blinker>=1.7.0
+streamlit>=1.30.0
+google-genai>=0.1.0
+google-adk>=0.1.0

@@ -8,12 +8,11 @@ It can eat quantum treats, rest in standby mode, share spontaneous concise thoug
 ---
 
 ## High-Level Application Architecture
-The application seamlessly combines a Node.js web server with a Python-based AI and UI orchestration layer:
+The application is built on a streamlined, high-performance Python runtime:
 
-1. **Express Proxy Server (`server.ts` - Node.js):** Binds to port `8080` for Cloud Run ingress and proxies traffic to Python Streamlit. It includes a `waitForStreamlit` health-check poller (`http://127.0.0.1:8501/_stcore/health`) that prevents container startup 500 errors by ensuring Express only opens traffic after Streamlit is fully warmed up.
-2. **Streamlit UI Engine (`app.py` - Python):** Manages the dark-mode UI layout (`.streamlit/config.toml`), tracks pet state variables, renders the dynamic vector SVG holograms, and includes collapsible telemetry logs (`🛠️ View ADK Debug & Tool Logs`).
-3. **Google ADK & Gemini 3.5 Flash:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
-4. **Cloud Run Nested Code Execution Sandbox (`sandbox do`):** Leverages Cloud Run's gVisor sandbox feature to execute untrusted Python scripts in ephemeral microVMs without exposing host credentials or environment variables.
+1. **Streamlit UI Engine (`app.py` - Python):** Binds directly to port `8080` (or local port) for Cloud Run ingress. It manages the dark-mode UI layout (`.streamlit/config.toml`), tracks pet state variables, renders dynamic vector SVG holograms, and includes collapsible telemetry logs (`🛠️ View ADK Debug & Tool Logs`).
+2. **Google ADK & Gemini 3.5 Flash:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
+3. **Cloud Run Nested Code Execution Sandbox (`sandbox do`):** Leverages Cloud Run's gVisor sandbox feature to execute untrusted Python scripts in ephemeral microVMs without exposing host credentials or environment variables.
 
 ---
 
@@ -27,11 +26,13 @@ The application seamlessly combines a Node.js web server with a Python-based AI 
 
 ## Run Locally
 
-**Prerequisites:** Node.js 20+, Python 3.10+
+**Prerequisites:** Python 3.10+
 
-1. Install dependencies:
+1. Create a virtual environment and install dependencies:
    ```bash
-   npm install
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
    ```
 2. Set your Gemini API Key. Create a `.env` file in the root directory and add:
    ```env
@@ -39,7 +40,7 @@ The application seamlessly combines a Node.js web server with a Python-based AI 
    ```
 3. Run the app locally:
    ```bash
-   npm run dev
+   streamlit run app.py
    ```
 
 ---
