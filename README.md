@@ -14,7 +14,6 @@ The application seamlessly combines a Node.js web server with a Python-based AI 
 2. **Streamlit UI Engine (`app.py` - Python):** Manages the dark-mode UI layout (`.streamlit/config.toml`), tracks pet state variables, renders the dynamic vector SVG holograms, and includes collapsible telemetry logs (`🛠️ View ADK Debug & Tool Logs`).
 3. **Google ADK & Gemini 3.5 Flash:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
 4. **Cloud Run Nested Code Execution Sandbox (`sandbox do`):** Leverages Cloud Run's gVisor sandbox feature to execute untrusted Python scripts in ephemeral microVMs without exposing host credentials or environment variables.
-5. **Real-Time Deployment & Cost Detection:** Dynamically detects whether the application is running as a **Cloud Run Service** or a **Cloud Run Instance** by checking `K_SERVICE`, displaying real-time compute specs (`2 vCPU | 2 GB RAM`) and estimating monthly VM costs (`~$11.40/mo`).
 
 ---
 
@@ -22,7 +21,7 @@ The application seamlessly combines a Node.js web server with a Python-based AI 
 - **🎩 AI Fashion Designer (Sandbox Crown Generator):** Untrusted Python math scripts calculate 7-point polygon coordinates dynamically in `sandbox do` and render royal crown SVG accessories on the pet's head, complete with an automatic 4.5-second JavaScript fade-out and state reset.
 - **🛡️ Sandbox Security Proof-of-Concept:** Built-in exploit testing presets demonstrate gVisor isolation in real time by blocking attempts to read `/etc/shadow` or steal `GEMINI_API_KEY` from `/proc`.
 - **💬 Interactive ADK Chat:** Converse bidirectionally with your pet using Gemini 3.5 Flash; the agent automatically invokes tools in response to conversational requests.
-- **☁️ Live Cloud Run Telemetry:** Inspect deployment type, region, compute resources, and estimated instance pricing directly from the sidebar.
+- **💡 Cost-Effective Always-On Compute:** Leverages long-lived Cloud Run Instances (preview) to provide a cost-effective, persistent runtime ideally suited for continuous virtual pet state and background AI processing.
 
 ---
 
@@ -69,10 +68,12 @@ gcloud beta run deploy agentgotchi-cloudrun \
 ```
 *(Note: The `--sandbox-launcher` flag mounts the `sandbox` binary inside your Cloud Run container at runtime, enabling untrusted Python code execution in isolated gVisor sandboxes via `sandbox do`.)*
 
+*(Note: `GEMINI_API_KEY` is passed as an environment variable here specifically to demonstrate the sandbox security isolation feature (proving untrusted scripts cannot read host environment variables). In standard production deployments, you can authenticate Gemini API calls via Vertex AI using the Cloud Run Service Account identity instead of an API key.)*
+
 ### 3. Alternative: Deploy as a Cloud Run Instance (Private Preview)
 If you have access to Cloud Run Instances, you can deploy Agentgotchi as a long-lived VM Instance instead of an autoscaled Service:
 
-1. **Create the Instance:** Explicitly specify `--port=8080` (Cloud Run Instances do not automatically inject `$PORT`):
+1. **Create the Instance:**
    ```bash
    gcloud alpha run instances create agentgotchi-instance \
      --image="YOUR_IMAGE_URL_HERE" \
