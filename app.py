@@ -1,4 +1,6 @@
 import os
+import sys
+import shutil
 import time
 import subprocess
 import json
@@ -65,9 +67,10 @@ def execute_in_cloud_run_sandbox(python_code: str) -> tuple[str, str, bool]:
     falling back to isolated gVisor subprocess execution.
     Returns (stdout, stderr, used_cloud_run_sandbox)
     """
+    py_bin = sys.executable or shutil.which("python3") or shutil.which("python") or "/usr/bin/python3"
     try:
         # Cloud Run Code Execution Sandbox feature: `sandbox do <command>`
-        cmd = ["sandbox", "do", "--", "/usr/bin/python3", "-c", python_code]
+        cmd = ["sandbox", "do", "--", py_bin, "-c", python_code]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
         if proc.returncode == 0 or (proc.stderr and "command not found" not in proc.stderr.lower()):
             return proc.stdout, proc.stderr, True
@@ -75,8 +78,8 @@ def execute_in_cloud_run_sandbox(python_code: str) -> tuple[str, str, bool]:
         pass
 
     # Fallback to isolated gVisor subprocess execution
-    isolated_env = {"PATH": "/usr/bin:/bin"}
-    proc = subprocess.run(["/usr/bin/python3", "-c", python_code], capture_output=True, text=True, timeout=5, env=isolated_env)
+    isolated_env = {"PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")}
+    proc = subprocess.run([py_bin, "-c", python_code], capture_output=True, text=True, timeout=5, env=isolated_env)
     return proc.stdout, proc.stderr, False
 
 # Initialize Session State for Pet Data
