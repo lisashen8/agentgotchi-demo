@@ -1,32 +1,32 @@
-FROM node:20-slim
+FROM python:3.11-slim
 
-# Install Python 3 and required tools
+# Set environment variables for Python efficiency and unbuffered output
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=8080
+
+# Install system dependencies (curl required for bootstrap/sandbox utilities)
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv curl && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Create and activate a virtual environment to avoid PEP 668 restrictions
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Pre-install the Python dependencies required by the backend
-RUN pip install streamlit google-genai google-adk
-
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package configurations first to leverage Docker cache
-COPY package.json ./
+# Copy requirements and install dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Node dependencies
-RUN npm install
-
-# Copy the rest of the application
+# Copy application files
 COPY . .
 
-# Build the Express TypeScript server
-RUN npm run build
+# Expose port
+EXPOSE 8080
 
-# Start the application
-CMD ["npm", "start"]
+# Run Streamlit directly
+CMD streamlit run app.py \
+    --server.port=${PORT} \
+    --server.address=0.0.0.0 \
+    --server.headless=true \
+    --server.enableCORS=false \
+    --server.enableXsrfProtection=false
