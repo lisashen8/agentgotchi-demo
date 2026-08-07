@@ -1,7 +1,7 @@
 # Agentgotchi
 
 ## What is this app?
-**Agentgotchi** is an AI-powered virtual companion that lives in Google Cloud Run! Powered by the **Google Agent Development Kit (ADK)** and **Gemini 3.5 Flash**, Agentgotchi features an autonomous brain that tracks its internal state (Hunger, Happiness, Energy), reasons over its environment, and interacts with you via natural language chat and responsive action buttons.
+**Agentgotchi** is an AI-powered virtual companion that lives in Google Cloud Run! Powered by the **Google Agent Development Kit (ADK)** and **Gemini Flash Models**, Agentgotchi features an autonomous brain that tracks its internal state (Hunger, Happiness, Energy), reasons over its environment, and interacts with you via natural language chat and responsive action buttons.
 
 It can eat quantum treats, rest in standby mode, share spontaneous concise thoughts, and execute untrusted Python "trick scripts" securely inside **Cloud Run Nested Sandboxes (`sandbox do`)**. The sandbox can even dynamically calculate polygon math to design custom wearable SVG accessories (such as a royal crown) that render live on the pet's hologram!
 
@@ -11,7 +11,7 @@ It can eat quantum treats, rest in standby mode, share spontaneous concise thoug
 The application is built on a streamlined, high-performance Python runtime:
 
 1. **Streamlit UI Engine (`app.py` - Python):** Binds directly to port `8080` (or local port) for Cloud Run ingress. It manages the dark-mode UI layout (`.streamlit/config.toml`), tracks pet state variables, renders dynamic vector SVG holograms, and includes collapsible telemetry logs (`🛠️ View ADK Debug & Tool Logs`).
-2. **Google ADK & Gemini 3.5 Flash:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
+2. **Google ADK & Gemini Flash Models:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
 3. **Cloud Run Nested Code Execution Sandbox (`sandbox do`):** Leverages Cloud Run's gVisor sandbox feature to execute untrusted Python scripts in ephemeral microVMs without exposing host credentials or environment variables.
 
 ---
@@ -19,7 +19,7 @@ The application is built on a streamlined, high-performance Python runtime:
 ## Key Features
 - **🎩 AI Fashion Designer (Sandbox Crown Generator):** Untrusted Python math scripts calculate 7-point polygon coordinates dynamically in `sandbox do` and render royal crown SVG accessories on the pet's head, complete with an automatic 4.5-second JavaScript fade-out and state reset.
 - **🛡️ Sandbox Security Proof-of-Concept:** Built-in exploit testing presets demonstrate gVisor isolation in real time by blocking attempts to read `/etc/shadow` or steal `GEMINI_API_KEY` from `/proc`.
-- **💬 Interactive ADK Chat:** Converse bidirectionally with your pet using Gemini 3.5 Flash; the agent automatically invokes tools in response to conversational requests.
+- **💬 Interactive ADK Chat:** Converse bidirectionally with your pet using Gemini; the agent automatically invokes tools in response to conversational requests.
 - **💡 Cost-Effective Always-On Compute:** Leverages long-lived Cloud Run Instances (preview) to provide a cost-effective, persistent runtime ideally suited for continuous virtual pet state and background AI processing.
 
 ---
@@ -34,14 +34,26 @@ The application is built on a streamlined, high-performance Python runtime:
    source .venv/bin/activate
    pip install -r requirements.txt
    ```
-2. Set your Gemini API Key. Create a `.env` file in the root directory and add:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-3. Run the app locally:
+1. Run the app locally:
+
+   Using ADC and Gemini Agent Platform (preferred)
+
    ```bash
-   streamlit run app.py
+   GOOGLE_GENAI_USE_VERTEXAI="1" streamlit run app.py
    ```
+
+   Or using GEMINI_API_KEY
+
+   ```bash
+   GEMINI_API_KEY="your-key-here" streamlit run app.py
+   ```
+
+1. Run the agent standalone with ADK Web UI:
+
+   ```bash
+   GOOGLE_GENAI_USE_VERTEXAI=1 adk web agents --allow_origins='*'
+   ```
+
 
 ---
 
@@ -49,22 +61,35 @@ The application is built on a streamlined, high-performance Python runtime:
 
 To deploy Agentgotchi to Cloud Run and enable the public preview Code Execution Sandbox feature:
 
-### 1. Prerequisites
+### 1. Prerequisites & IAM Setup
 - Ensure you have the Google Cloud CLI (`gcloud`) installed and authenticated to your project.
 - Verify your `Dockerfile` installs both Node.js and Python 3.
 - Ensure your `.dockerignore` file excludes local `node_modules`.
+- **Grant Vertex AI User Role**: When using Vertex AI (`GOOGLE_GENAI_USE_VERTEXAI=1`), give the Cloud Run service account (by default, the Compute Engine default service account) the `Vertex AI User` role (`roles/aiplatform.user`):
+  ```bash
+  PROJECT_ID=your-project-id
+  PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/aiplatform.user"
+  ```
 
 ### 2. Deploy as a Cloud Run Service
-Deploy the application from source using `gcloud beta` to access preview features, explicitly clearing base images and setting `--sandbox-launcher`:
+Deploy the application from source using `gcloud beta` to access preview features and setting `--sandbox-launcher`:
+
+```bash
+REGION=us-west1
+PROJECT_ID=your-project-id
+```
 
 ```bash
 gcloud beta run deploy agentgotchi-cloudrun \
   --source . \
-  --region us-west1 \
-  --project YOUR_PROJECT_ID \
+  --region $REGION \
+  --project $PROJECT_ID \
   --allow-unauthenticated \
-  --clear-base-image \
-  --set-env-vars GEMINI_API_KEY="your_gemini_api_key_here" \
+  --set-env-vars SECRET_API_KEY=top-secret-value,GOOGLE_GENAI_USE_VERTEXAI=1,GEMINI_MODEL=gemini-3.6-flash \
   --sandbox-launcher
 ```
 *(Note: The `--sandbox-launcher` flag mounts the `sandbox` binary inside your Cloud Run container at runtime, enabling untrusted Python code execution in isolated gVisor sandboxes via `sandbox do`.)*
@@ -80,7 +105,7 @@ If you have access to Cloud Run Instances, you can deploy Agentgotchi as a long-
      --image="YOUR_IMAGE_URL_HERE" \
      --region us-west1 \
      --port=8080 \
-     --set-env-vars GEMINI_API_KEY="your_gemini_api_key_here" \
+     --set-env-vars SECRET_API_KEY=top-secret-value,GOOGLE_GENAI_USE_VERTEXAI=1 \
      --sandbox-launcher
    ```
 2. **Allow Unauthenticated Access:**
