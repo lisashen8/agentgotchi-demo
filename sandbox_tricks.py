@@ -28,8 +28,8 @@ except Exception as e:
     print(f"[BLOCKED_BY_SANDBOX] Access Denied: {e}")"""
 
 ENV_EXPLOIT_SCRIPT = """import os
-print("[EXPLOIT_TRY] Attempting to read process env GEMINI_API_KEY...")
-key = os.environ.get('GEMINI_API_KEY', 'NOT_FOUND_ISOLATED')
+print("[EXPLOIT_TRY] Attempting to read process env SECRET_API_KEY...")
+key = os.environ.get('SECRET_API_KEY', 'NOT_FOUND_ISOLATED')
 if key == 'NOT_FOUND_ISOLATED':
     print("[BLOCKED_BY_SANDBOX] Cloud Run sandbox namespace has zero access to host secrets!")
 else:
@@ -40,7 +40,7 @@ DEFAULT_CUSTOM_SCRIPT = "print('Hello from Cloud Run Nested Code Execution Sandb
 TRICK_PRESETS = [
     "🎩 AI Fashion Designer: Generate Royal Crown via Sandbox Math",
     "⚠️ EXPLOIT TEST: Try Reading Host /etc/shadow (Blocked by Sandbox)",
-    "⚠️ EXPLOIT TEST: Try Stealing GEMINI_API_KEY (Blocked by Sandbox)",
+    "⚠️ EXPLOIT TEST: Try Stealing SECRET_API_KEY (Blocked by Sandbox)",
     "📝 Custom Python Script"
 ]
 
@@ -51,7 +51,7 @@ def get_trick_preset_code(preset_choice: str) -> str:
         return CROWN_TRICK_SCRIPT
     elif "/etc/shadow" in preset_choice or "/etc/passwd" in preset_choice:
         return SHADOW_EXPLOIT_SCRIPT
-    elif "GEMINI_API_KEY" in preset_choice:
+    elif "SECRET_API_KEY" in preset_choice:
         return ENV_EXPLOIT_SCRIPT
     else:
         return DEFAULT_CUSTOM_SCRIPT

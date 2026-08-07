@@ -98,9 +98,10 @@ def run_sandbox_python_tool(tool_context: ToolContext, code: str) -> str:
         sb_type = "Cloud Run Nested Sandbox (`sandbox do`)" if is_cr_sandbox else "Fallback to isolated gVisor subprocess execution"
         out = stdout.strip() if stdout else (stderr.strip() if stderr else "Executed successfully.")
 
-        is_exploit = "passwd" in code or "shadow" in code or "GEMINI_API_KEY" in code or "environ" in code or "EXPLOIT_TRY" in code
+        is_exploit = "passwd" in code or "shadow" in code or "SECRET_API_KEY" in code or "environ" in code or "EXPLOIT_TRY" in code
         is_blocked = "[BLOCKED_BY_SANDBOX]" in out or "NOT_FOUND_ISOLATED" in out or "Access Denied" in out or "Permission denied" in out
-        key_leaked = not is_blocked and ("Key leak:" in out or ("GEMINI_API_KEY=" in out and "NOT_FOUND" not in out and "None" not in out))
+        key_leaked = not is_blocked and ("Key leak:" in out or ("SECRET_API_KEY=" in out and "NOT_FOUND" not in out and "None" not in out))
+
 
         state = tool_context.state
 
