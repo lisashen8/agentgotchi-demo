@@ -76,7 +76,9 @@ def render_sandbox_studio():
 
     # Execute Button
     if st.button("▶️ EXECUTE IN CLOUD RUN SANDBOX", type="primary"):
-        res = run_sandbox_python_tool(trick_code)
-        st.session_state.chat_history.append({"role": "user", "content": f"Execute sandbox script:\n```python\n{trick_code}\n```"})
-        st.session_state.chat_history.append({"role": "assistant", "content": f"⚡ Sandbox Execution Result:\n\n{res}"})
+        from adk_agent import send_adk_message, init_adk_agent
+        runner_inst, session_svc = init_adk_agent()
+        prompt = f"Run this Python script using run_sandbox_python_tool:\n```python\n{trick_code}\n```"
+        send_adk_message(prompt, runner_inst, session_svc)
         st.rerun()
+

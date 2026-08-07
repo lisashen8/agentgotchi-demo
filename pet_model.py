@@ -3,26 +3,30 @@ from datetime import datetime
 import streamlit as st
 from adk_agent import get_model_display_name
 
+try:
+    from agents.agentgotchi.agent import DEFAULT_PET_STATE
+except ImportError:
+    import sys
+    from pathlib import Path
+    project_root = str(Path(__file__).resolve().parent)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    from agents.agentgotchi.agent import DEFAULT_PET_STATE
+
+
+
 def init_pet_state():
     """Initializes session state variables for Pet, animations, and chat history."""
     if "pet" not in st.session_state:
         model_display = get_model_display_name()
-        st.session_state.pet = {
-            "name": "Quantum Byte",
-            "species": "Quantum Slime",
-            "level": 5,
-            "xp": 350,
-            "max_xp": 500,
-            "hunger": 50,  # 50% Fullness
-            "happiness": 70,
-            "energy": 80,
-            "mood": "HAPPY",
-            "accessory_svg": "",
-            "thoughts": [
-                f"[{datetime.now().strftime('%H:%M:%S')}] Google ADK Agent Engine active with {model_display}.",
-                f"[{datetime.now().strftime('%H:%M:%S')}] Cloud Run Nested Sandbox (`sandbox do`) code execution active."
-            ]
-        }
+        pet_state = dict(DEFAULT_PET_STATE)
+        pet_state["thoughts"] = [
+            f"[{datetime.now().strftime('%H:%M:%S')}] Google ADK Agent Engine active with {model_display}.",
+            f"[{datetime.now().strftime('%H:%M:%S')}] Cloud Run Nested Sandbox (`sandbox do`) code execution active."
+        ]
+        st.session_state.pet = pet_state
+
+
 
     if "anim_state" not in st.session_state:
         st.session_state.anim_state = 0

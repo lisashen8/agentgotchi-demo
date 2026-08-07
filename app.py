@@ -2,7 +2,7 @@ import time
 import streamlit as st
 
 from pet_model import init_pet_state
-from adk_agent import init_adk_agent, send_adk_message, get_model_display_name
+from adk_agent import init_adk_agent, send_adk_message, get_model_display_name, ensure_adk_session
 from ui_components import render_styles, render_pet_visualizer, render_sidebar
 from sandbox_tricks import render_sandbox_studio
 
@@ -22,6 +22,8 @@ init_pet_state()
 
 # Initialize ADK Agent Runner and Session Service
 runner_inst, session_svc = init_adk_agent()
+ensure_adk_session(session_svc)
+
 
 # Header Banner
 st.title("🤖 AGENTGOTCHI")

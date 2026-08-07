@@ -59,6 +59,34 @@ async def run_adk_turn_async(runner, session_id, user_text):
     reply = " ".join(response_texts) if response_texts else "ADK Agent processed request."
     return reply, tools_called
 
+def ensure_adk_session(session_svc):
+    """Ensures an ADK session is created with initial state if not already initialized."""
+    if "adk_session_id" not in st.session_state:
+        session = asyncio.run(session_svc.create_session(
+            app_name="agentgotchi_adk_app",
+            user_id="user1",
+            state=dict(st.session_state.pet)
+        ))
+        st.session_state.adk_session_id = session.id
+        return session
+    else:
+        session = asyncio.run(session_svc.get_session(
+            app_name="agentgotchi_adk_app",
+            user_id="user1",
+            session_id=st.session_state.adk_session_id
+        ))
+        if not session:
+            session = asyncio.run(session_svc.create_session(
+                app_name="agentgotchi_adk_app",
+                user_id="user1",
+                session_id=st.session_state.adk_session_id,
+                state=dict(st.session_state.pet)
+            ))
+        else:
+            for k, v in st.session_state.pet.items():
+                session.state[k] = v
+        return session
+
 def send_adk_message(prompt: str, runner_inst, session_svc, skip_user_append: bool = False):
     if not prompt.strip():
         return
@@ -67,11 +95,20 @@ def send_adk_message(prompt: str, runner_inst, session_svc, skip_user_append: bo
         st.session_state.chat_history.append({"role": "user", "content": prompt})
 
     try:
-        if "adk_session_id" not in st.session_state:
-            session = asyncio.run(session_svc.create_session(app_name="agentgotchi_adk_app", user_id="user1"))
-            st.session_state.adk_session_id = session.id
+        ensure_adk_session(session_svc)
 
         reply, tools = asyncio.run(run_adk_turn_async(runner_inst, st.session_state.adk_session_id, prompt))
+        
+        # Read back updated ADK session state into Streamlit session_state for rendering
+        session = asyncio.run(session_svc.get_session(
+            app_name="agentgotchi_adk_app",
+            user_id="user1",
+            session_id=st.session_state.adk_session_id
+        ))
+        if session and session.state:
+            for k, v in session.state.items():
+                st.session_state.pet[k] = v
+
         if tools:
             tool_str = ", ".join(tools)
             st.toast(f"🛠️ ADK Agent dispatched tool(s): {tool_str}")
@@ -103,3 +140,5 @@ def send_adk_message(prompt: str, runner_inst, session_svc, skip_user_append: bo
             reply = f"Beep boop! I am {pet['name']}, powered by Google Agent Development Kit (ADK)!"
         st.session_state.chat_history.append({"role": "assistant", "content": reply})
         pet["thoughts"].insert(0, f"[{datetime.now().strftime('%H:%M:%S')}] 🤖 ADK Agent: {reply}")
+
+
