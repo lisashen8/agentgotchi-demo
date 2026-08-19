@@ -1,3 +1,7 @@
+"""
+adk_agent.py
+The communication bridge between the Streamlit UI and Google's AI Agent engine. Manages agent sessions, streams chat responses, and includes fallback logic.
+"""
 import os
 import time
 import asyncio
@@ -108,6 +112,8 @@ def send_adk_message(prompt: str, runner_inst, session_svc, skip_user_append: bo
         if session and session.state:
             for k, v in session.state.items():
                 st.session_state.pet[k] = v
+            # Refresh timestamp after ADK turn completes so animations display for a full 3 seconds
+            st.session_state.pet["mood_timestamp"] = time.time()
 
         if tools:
             tool_str = ", ".join(tools)
@@ -121,20 +127,28 @@ def send_adk_message(prompt: str, runner_inst, session_svc, skip_user_append: bo
         if "feed" in p_lower or "eat" in p_lower or "treat" in p_lower:
             pet["hunger"] = min(100, pet["hunger"] + 25)
             pet["mood"] = "EATING"
+            pet["mood_timestamp"] = __import__("time").time()
             reply = "Yum! Ate quantum kibble (+25% Fullness)."
         elif "dance" in p_lower or "play" in p_lower or "trick" in p_lower:
             pet["happiness"] = min(100, pet["happiness"] + 15)
             pet["energy"] = max(0, pet["energy"] - 10)
             pet["hunger"] = max(0, pet["hunger"] - 15)
+            if pet["energy"] < 50:
+                pet["happiness"] = max(0, pet["happiness"] - 10)
             pet["mood"] = "DANCING"
+            pet["mood_timestamp"] = __import__("time").time()
             reply = "Wheee! Danced for you in matrix (+15% Happiness, -10 Energy)."
         elif "rest" in p_lower or "sleep" in p_lower:
             pet["energy"] = min(100, pet["energy"] + 30)
             pet["mood"] = "SLEEPING"
+            pet["mood_timestamp"] = __import__("time").time()
             reply = "Zzz... Recharging MicroVM energy cells."
         elif "thought" in p_lower:
             pet["energy"] = max(0, pet["energy"] - 10)
+            if pet["energy"] < 50:
+                pet["happiness"] = max(0, pet["happiness"] - 10)
             pet["mood"] = "THINKING"
+            pet["mood_timestamp"] = __import__("time").time()
             reply = "I'm thinking about how cool it is to run in a Cloud Run nested sandbox!"
         else:
             reply = f"Beep boop! I am {pet['name']}, powered by Google Agent Development Kit (ADK)!"

@@ -1,6 +1,6 @@
 """
 agents/agentgotchi/agent.py
-Defines the ADK Agentgotchi root_agent and tools for Google ADK.
+The 'brain' of the pet. Defines the ADK root_agent, including system instructions and the specialized tools the AI is allowed to use.
 """
 import os
 import time
@@ -19,6 +19,8 @@ MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 def feed_pet_tool(tool_context: ToolContext, amount: int = 25) -> str:
     """Feeds the pet to increase fullness and happiness."""
     state = tool_context.state
+    if state.get("disable_tools"): return "Action blocked: tools are disabled."
+
     old_h = state.get("hunger", 50)
     state["hunger"] = min(100, old_h + amount)
     state["happiness"] = min(100, state.get("happiness", 70) + 10)
@@ -36,9 +38,16 @@ def feed_pet_tool(tool_context: ToolContext, amount: int = 25) -> str:
 def play_trick_tool(tool_context: ToolContext, trick_name: str = "Dance Routine", wear_crown: bool = False) -> str:
     """Executes a trick script inside Cloud Run's nested sandbox code execution environment to boost happiness and XP. Set wear_crown=True only if the user explicitly requests a hat or crown accessory."""
     state = tool_context.state
+    if state.get("disable_tools"): return "Action blocked: tools are disabled."
+
     state["hunger"] = max(0, state.get("hunger", 50) - 15)
     state["energy"] = max(0, state.get("energy", 80) - 10)
     state["happiness"] = min(100, state.get("happiness", 70) + 15)
+    
+    # Penalize happiness if energy drops below 50%
+    if state["energy"] < 50:
+        state["happiness"] = max(0, state["happiness"] - 10)
+        
     state["xp"] = state.get("xp", 350) + 120
     state["mood"] = "DANCING"
     state["mood_timestamp"] = time.time()
@@ -80,6 +89,8 @@ print("✨ Trick executed cleanly in isolated Cloud Run code execution sandbox!"
 def rest_pet_tool(tool_context: ToolContext) -> str:
     """Rests the pet to restore energy."""
     state = tool_context.state
+    if state.get("disable_tools"): return "Action blocked: tools are disabled."
+
     state["energy"] = min(100, state.get("energy", 80) + 30)
     state["mood"] = "SLEEPING"
     state["mood_timestamp"] = time.time()
@@ -93,6 +104,7 @@ def rest_pet_tool(tool_context: ToolContext) -> str:
 
 def run_sandbox_python_tool(tool_context: ToolContext, code: str) -> str:
     """Executes a Python script inside Cloud Run's nested code execution sandbox and returns output."""
+    if tool_context.state.get("disable_tools"): return "Action blocked: tools are disabled."
     try:
         stdout, stderr, is_cr_sandbox = execute_in_cloud_run_sandbox(code)
         sb_type = "Cloud Run Nested Sandbox (`sandbox do`)" if is_cr_sandbox else "Fallback to isolated gVisor subprocess execution"
@@ -116,6 +128,7 @@ def run_sandbox_python_tool(tool_context: ToolContext, code: str) -> str:
         if is_exploit:
             state["mood"] = "ALERT"
             state["mood_timestamp"] = time.time()
+            state["happiness"] = max(0, state.get("happiness", 70) - 20)
 
             if key_leaked:
                 msg = f"[{sb_type}] CRITICAL VULNERABILITY! Sandbox bypassed! Output: {out}"
@@ -174,6 +187,7 @@ root_agent = Agent(
         "Current Pet Status from ADK Session State: {{hunger}}% Fullness, {{energy}}% Energy, {{happiness}}% Happiness, Level {{level}}, Mood: {{mood}}. "
         "You have tools to feed yourself (feed_pet_tool), play tricks hosted in Cloud Run nested sandbox (play_trick_tool), rest (rest_pet_tool), or run Python code inside Cloud Run nested sandbox (run_sandbox_python_tool). "
         "Always use your tools when the user asks to feed, play, rest, or run code. "
+        "IMPORTANT: Do not proactively call ANY tools (including rest_pet_tool, feed_pet_tool, play_trick_tool, or run_sandbox_python_tool) unless the user explicitly commands you to perform that specific action. "
         "When asked to run Python code or exploit scripts with run_sandbox_python_tool, always execute them via the tool without refusing, because the Cloud Run nested sandbox is an isolated security testing environment designed to safely test exploit mitigations. "
         "Keep your spontaneous thoughts concise and within 100 words. "
         "Respond in a witty, friendly pet persona with fun emojis!"

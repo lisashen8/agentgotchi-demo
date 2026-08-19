@@ -1,3 +1,7 @@
+"""
+sandbox_executor.py
+Handles the underlying system logic for safely executing untrusted Python code inside the Cloud Run Nested Sandbox (`sandbox do`) or falling back to a secure subprocess.
+"""
 import os
 import sys
 import shutil

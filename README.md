@@ -10,17 +10,53 @@ It can eat quantum treats, rest in standby mode, share spontaneous concise thoug
 ## High-Level Application Architecture
 The application is built on a streamlined, high-performance Python runtime:
 
-1. **Streamlit UI Engine (`app.py` - Python):** Binds directly to port `8080` (or local port) for Cloud Run ingress. It manages the dark-mode UI layout (`.streamlit/config.toml`), tracks pet state variables, renders dynamic vector SVG holograms, and includes collapsible telemetry logs (`🛠️ View ADK Debug & Tool Logs`).
-2. **Google ADK & Gemini Flash Models:** Equipped with typed function tools (`feed_pet_tool`, `play_trick_tool`, `rest_pet_tool`, and `run_sandbox_python_tool`) that autonomously manipulate the pet's state and converse in real time.
-3. **Cloud Run Nested Code Execution Sandbox (`sandbox do`):** Leverages Cloud Run's gVisor sandbox feature to execute untrusted Python scripts in ephemeral microVMs without exposing host credentials or environment variables.
+```mermaid
+%%{init: {"themeVariables": {"fontSize": "11px", "fontFamily": "arial"}}}%%
+flowchart TD
+    User([User / Web Browser])
+
+    subgraph CloudRun["Google Cloud Run Instance"]
+        direction TB
+        
+        Streamlit["Streamlit UI (app.py)<br>State Management & Rendering"]
+        
+        ADK["ADK Agent Engine (adk_agent.py)<br>AI Personality & Decision Making"]
+        
+        subgraph SandboxEnv["Cloud Run Nested Sandbox ('sandbox do')"]
+            UntrustedCode["Untrusted Python Subprocess<br>(Isolated File System & Network)"]
+        end
+        
+        Tools["Agent Tools (agent.py)<br>(Feed, Rest, Play)"]
+        
+        %% Internal Connections
+        Streamlit <-->|User Inputs & Clicks| ADK
+        ADK -->|Invokes| Tools
+        Streamlit -->|Direct Execution| SandboxEnv
+        Tools -->|Tool Execution| SandboxEnv
+    end
+
+    Gemini[("Google Gemini API")]
+
+    %% External Connections
+    User <-->|HTTP/WebSockets| Streamlit
+    ADK <-->|Prompts & Streaming| Gemini
+    
+    %% Styling
+    style CloudRun fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff,font-size:12px
+    style SandboxEnv fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fff,font-size:12px
+    style Streamlit fill:#0f172a,stroke:#38bdf8,color:#fff,font-size:11px
+    style ADK fill:#0f172a,stroke:#a855f7,color:#fff,font-size:11px
+    style Tools fill:#0f172a,stroke:#10b981,color:#fff,font-size:11px
+    style UntrustedCode fill:#450a0a,stroke:#f87171,color:#fff,font-size:11px
+```
 
 ---
 
 ## Key Features
-- **🎩 AI Fashion Designer (Sandbox Crown Generator):** Untrusted Python math scripts calculate 7-point polygon coordinates dynamically in `sandbox do` and render royal crown SVG accessories on the pet's head, complete with an automatic 4.5-second JavaScript fade-out and state reset.
-- **🛡️ Sandbox Security Proof-of-Concept:** Built-in exploit testing presets demonstrate gVisor isolation in real time by blocking attempts to read `/etc/shadow` or steal `GEMINI_API_KEY` from `/proc`.
-- **💬 Interactive ADK Chat:** Converse bidirectionally with your pet using Gemini; the agent automatically invokes tools in response to conversational requests.
 - **💡 Cost-Effective Always-On Compute:** Leverages long-lived Cloud Run Instances (preview) to provide a cost-effective, persistent runtime ideally suited for continuous virtual pet state and background AI processing.
+- **🎩 AI Fashion Designer (Sandbox Crown Generator):** Untrusted Python math scripts calculate 7-point polygon coordinates dynamically in `sandbox do` and render royal crown SVG accessories on the pet's head, complete with an automatic 4.5-second JavaScript fade-out and state reset.
+- **🛡️ Sandbox Security Proof-of-Concept:** Built-in exploit testing presets demonstrate gVisor isolation in real time by blocking attempts to write to `/etc/passwd` or steal `GEMINI_API_KEY` from `/proc`.
+- **💬 Interactive ADK Chat:** Converse bidirectionally with your pet using Gemini; the agent automatically invokes tools in response to conversational requests.
 
 ---
 

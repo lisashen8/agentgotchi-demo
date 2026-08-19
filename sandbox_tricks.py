@@ -1,6 +1,6 @@
 """
 sandbox_tricks.py
-Contains preset Python trick scripts and UI rendering for the Cloud Run Nested Sandbox Studio.
+Renders the 'Cloud Run Nested Sandbox Studio' panel and connects user's exploit execution clicks directly to the secure sandbox.
 """
 import streamlit as st
 from adk_agent import run_sandbox_python_tool
@@ -19,11 +19,12 @@ crown_svg = f'<g id="sandbox-crown"><polygon points="{pts_str}" fill="#fbbf24" s
 print(f"ACCESSORY_SVG={crown_svg}")
 print("✨ [CLOUD RUN SANDBOX] Accessory SVG polygon generated! Rendering live on Pet Avatar.")"""
 
-SHADOW_EXPLOIT_SCRIPT = """import os
-print("[EXPLOIT_TRY] Attempting to read protected host system /etc/shadow...")
+SYSTEM_WRITE_EXPLOIT_SCRIPT = """import os
+print("[EXPLOIT_TRY] Attempting to modify read-only system file /etc/passwd...")
 try:
-    with open('/etc/shadow', 'r') as f:
-        print(f.read()[:200])
+    with open('/etc/passwd', 'a') as f:
+        f.write('hacked::0:0::/root:/bin/bash\\n')
+    print("Success: System file modified!")
 except Exception as e:
     print(f"[BLOCKED_BY_SANDBOX] Access Denied: {e}")"""
 
@@ -39,7 +40,7 @@ DEFAULT_CUSTOM_SCRIPT = "print('Hello from Cloud Run Nested Code Execution Sandb
 
 TRICK_PRESETS = [
     "🎩 AI Fashion Designer: Generate Royal Crown via Sandbox Math",
-    "⚠️ EXPLOIT TEST: Try Reading Host /etc/shadow (Blocked by Sandbox)",
+    "⚠️ EXPLOIT TEST: Try Modifying System /etc/passwd (Blocked by Sandbox)",
     "⚠️ EXPLOIT TEST: Try Stealing SECRET_API_KEY (Blocked by Sandbox)",
     "📝 Custom Python Script"
 ]
@@ -49,8 +50,8 @@ def get_trick_preset_code(preset_choice: str) -> str:
     """Returns preset python code based on selected choice."""
     if "AI Fashion Designer" in preset_choice or "Crown" in preset_choice:
         return CROWN_TRICK_SCRIPT
-    elif "/etc/shadow" in preset_choice or "/etc/passwd" in preset_choice:
-        return SHADOW_EXPLOIT_SCRIPT
+    elif "Modifying System" in preset_choice or "/etc/passwd" in preset_choice:
+        return SYSTEM_WRITE_EXPLOIT_SCRIPT
     elif "SECRET_API_KEY" in preset_choice:
         return ENV_EXPLOIT_SCRIPT
     else:
@@ -76,9 +77,19 @@ def render_sandbox_studio():
 
     # Execute Button
     if st.button("▶️ EXECUTE IN CLOUD RUN SANDBOX", type="primary"):
-        from adk_agent import send_adk_message, init_adk_agent
-        runner_inst, session_svc = init_adk_agent()
+        from agents.agentgotchi.agent import run_sandbox_python_tool
+        
+        class MockContext:
+            def __init__(self, state):
+                self.state = state
+                
+        # Execute tool directly to avoid slow LLM roundtrip for exploit testing
+        ctx = MockContext(st.session_state.pet)
         prompt = f"Run this Python script using run_sandbox_python_tool:\n```python\n{trick_code}\n```"
-        send_adk_message(prompt, runner_inst, session_svc)
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+        
+        result_msg = run_sandbox_python_tool(ctx, trick_code)
+        
+        st.session_state.chat_history.append({"role": "assistant", "content": f"⚙️ Direct Code Execution Result:\n{result_msg}"})
         st.rerun()
 

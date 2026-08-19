@@ -1,3 +1,7 @@
+"""
+app.py
+The main frontend entry point for the application. Uses Streamlit to render the dashboard, manage button clicks, and synchronize the UI with the pet's underlying state.
+"""
 import time
 import streamlit as st
 
@@ -89,7 +93,8 @@ with col_pet:
     render_pet_visualizer(
         pet_display,
         mood=current_mood,
-        frame_idx=st.session_state.anim_state
+        frame_idx=st.session_state.anim_state,
+        timestamp=st.session_state.pet.get("mood_timestamp", 0)
     )
 
     # Pet Action Controls
@@ -102,6 +107,7 @@ with col_pet:
         prompt = "Feed the pet with a delicious treat"
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         st.session_state["pending_prompt"] = prompt
+        st.session_state.pet["disable_tools"] = False
         st.session_state.pet["mood"] = "EATING"
         st.session_state.pet["mood_timestamp"] = time.time()
         st.rerun()
@@ -110,6 +116,7 @@ with col_pet:
         prompt = "Perform a dance trick"
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         st.session_state["pending_prompt"] = prompt
+        st.session_state.pet["disable_tools"] = False
         st.session_state.pet["mood"] = "DANCING"
         st.session_state.pet["mood_timestamp"] = time.time()
         st.rerun()
@@ -118,15 +125,22 @@ with col_pet:
         prompt = "Rest and recharge your energy"
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         st.session_state["pending_prompt"] = prompt
+        st.session_state.pet["disable_tools"] = False
         st.session_state.pet["mood"] = "SLEEPING"
         st.session_state.pet["mood_timestamp"] = time.time()
         st.rerun()
 
     if b4.button("🧠 AI Thought", disabled=is_waiting):
-        prompt = "Share a spontaneous thought within 100 words about living inside a Cloud Run nested code execution sandbox"
+        prompt = "Share a spontaneous thought within 100 words about living inside a Cloud Run nested code execution sandbox. DO NOT invoke any tools."
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         st.session_state["pending_prompt"] = prompt
+        st.session_state.pet["disable_tools"] = True
         st.session_state.pet["energy"] = max(0, st.session_state.pet["energy"] - 10)
+        
+        # Penalize happiness if energy drops below 50%
+        if st.session_state.pet["energy"] < 50:
+            st.session_state.pet["happiness"] = max(0, st.session_state.pet["happiness"] - 10)
+            
         st.session_state.pet["mood"] = "THINKING"
         st.session_state.pet["mood_timestamp"] = time.time()
         st.rerun()
@@ -158,6 +172,7 @@ with col_studio:
     if user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         st.session_state["pending_prompt"] = user_input
+        st.session_state.pet["disable_tools"] = False
         st.rerun()
 
     if is_waiting:

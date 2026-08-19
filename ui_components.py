@@ -1,3 +1,7 @@
+"""
+ui_components.py
+The visual rendering engine. Dynamically generates complex, 60fps CSS-animated Vector Graphics (SVGs) for the pet without external image files.
+"""
 import os
 import urllib.request
 import urllib.parse
@@ -42,7 +46,7 @@ def render_styles():
     </style>
     """, unsafe_allow_html=True)
 
-def generate_pet_svg(mood="HAPPY", frame_idx=0):
+def generate_pet_svg(mood="HAPPY", frame_idx=0, timestamp=0):
     """Generates a rich SVG visualizer for the Quantum Slime Avatar with 60fps CSS animations."""
     configs = {
         "HAPPY": {
@@ -50,14 +54,14 @@ def generate_pet_svg(mood="HAPPY", frame_idx=0):
             "title": "HAPPY & HEALTHY",
             "eyes": '<circle cx="98" cy="86" r="8" fill="#ffffff"/><circle cx="142" cy="86" r="8" fill="#ffffff"/><circle cx="100" cy="84" r="3.5" fill="#020617"/><circle cx="144" cy="84" r="3.5" fill="#020617"/><circle cx="96" cy="83" r="1.5" fill="#fff"/><circle cx="140" cy="83" r="1.5" fill="#fff"/>',
             "mouth": '<path d="M 112 102 Q 120 114 128 102" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>',
-            "particles": "✨ ✨ ✨", "subtitle": "Google ADK State: Nominal"
+            "particles": "✨ ✨ ✨", "subtitle": "Ready for interaction!"
         },
         "DANCING": {
             "c1": "#ec4899", "c2": "#8b5cf6", "glow": "rgba(236,72,153,0.75)",
-            "title": "ADK DANCE TRICK ACTIVE 💃",
+            "title": "DANCE TRICK ACTIVE 💃",
             "eyes": '<path d="M 90 84 L 106 90 L 90 96" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M 150 84 L 134 90 L 150 96" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>',
             "mouth": '<ellipse cx="120" cy="106" rx="9" ry="7" fill="#ffffff"/>',
-            "particles": "🎵 🎶 💃 ✨ 🕺", "subtitle": "ADK Function Tool Active"
+            "particles": "🎵 🎶 💃 ✨ 🕺", "subtitle": "Performing trick!"
         },
         "ALERT": {
             "c1": "#ef4444", "c2": "#f97316", "glow": "rgba(239,68,68,0.65)",
@@ -85,7 +89,7 @@ def generate_pet_svg(mood="HAPPY", frame_idx=0):
             "title": "NEURAL THOUGHT & QUANTUM BYTE 🧠",
             "eyes": '<circle cx="98" cy="82" r="8" fill="#ffffff"/><circle cx="142" cy="82" r="8" fill="#ffffff"/><circle cx="102" cy="78" r="3.5" fill="#8b5cf6"/><circle cx="146" cy="78" r="3.5" fill="#8b5cf6"/><circle cx="104" cy="76" r="1.5" fill="#fff"/><circle cx="148" cy="76" r="1.5" fill="#fff"/>',
             "mouth": '<path d="M 114 104 Q 120 100 126 104" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>',
-            "particles": "🧠 ⚛️ Quantum Byte ⚡ 💡", "subtitle": "ADK Neural Stream"
+            "particles": "🧠 ⚛️ Quantum Byte ⚡ 💡", "subtitle": "Neural stream active..."
         }
     }
 
@@ -245,7 +249,7 @@ def generate_pet_svg(mood="HAPPY", frame_idx=0):
                 titleElem.style.color = "#06b6d4";
             }}
             var subElem = document.getElementById("status-subtitle");
-            if (subElem) subElem.innerText = "Google ADK State: Nominal";
+            if (subElem) subElem.innerText = "Ready for interaction!";
 
             var stop0 = document.getElementById("grad-stop0");
             var stop65 = document.getElementById("grad-stop65");
@@ -281,12 +285,13 @@ def generate_pet_svg(mood="HAPPY", frame_idx=0):
 </script>
 </body>
 </html>"""
+    html += f"<!-- TS: {timestamp} -->"
     return html
 
-def render_pet_visualizer(container, mood="HAPPY", frame_idx=0):
+def render_pet_visualizer(container, mood="HAPPY", frame_idx=0, timestamp=0):
     """Renders SVG Hologram into the container."""
     with container.container():
-        html_code = generate_pet_svg(mood, frame_idx)
+        html_code = generate_pet_svg(mood, frame_idx, timestamp)
         if hasattr(st, "iframe"):
             st.iframe(src="data:text/html;charset=utf-8," + urllib.parse.quote(html_code), height=240)
         else:

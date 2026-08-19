@@ -1,3 +1,7 @@
+"""
+pet_model.py
+Handles the default initialization of the pet, setting up initial variables for stats like Hunger, Happiness, and Energy when the app loads.
+"""
 import time
 from datetime import datetime
 import streamlit as st
