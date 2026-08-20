@@ -180,6 +180,7 @@ with col_studio:
         with chat_box:
             with st.spinner("Agentgotchi is thinking..."):
                 send_adk_message(prompt_to_process, runner_inst, session_svc, skip_user_append=True)
+        st.session_state.pet["disable_tools"] = False
         st.rerun()
 
     # Render Sandbox Code Execution Studio

@@ -77,6 +77,7 @@ def render_sandbox_studio():
 
     # Execute Button
     if st.button("▶️ EXECUTE IN CLOUD RUN SANDBOX", type="primary"):
+        st.session_state.pet["disable_tools"] = False
         from agents.agentgotchi.agent import run_sandbox_python_tool
         
         class MockContext:
