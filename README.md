@@ -1,5 +1,6 @@
 # Agentgotchi
 
+![Agentgotchi UI](assets/agentgotchi_ui.png)
 ## What is this app?
 **Agentgotchi** is an AI-powered virtual companion that lives in Google Cloud Run! Powered by the **Google Agent Development Kit (ADK)** and **Gemini Flash Models**, Agentgotchi features an autonomous brain that tracks its internal state (Hunger, Happiness, Energy), reasons over its environment, and interacts with you via natural language chat and responsive action buttons.
 

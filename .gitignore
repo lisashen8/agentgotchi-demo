@@ -16,3 +16,4 @@ coverage/
 *.db
 mynotes.md
 architecture.md
+deploy_all.sh
